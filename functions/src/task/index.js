@@ -37,9 +37,14 @@ exports.createTask = (req, res) => {
   connectToFirestore();
   //new task comes in request body
   const newTask = req.body
+
   //add to the database
   db.collection('task').add(newTask)
+
+  //then get response by calling a full list of all tasks
   .then(() => this.getTasks(req,res))
+
+  //catch the error first
   .catch(err => response.status(500).send('error creating task: ' + err.message))
   
 };
