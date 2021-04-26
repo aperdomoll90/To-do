@@ -14,9 +14,7 @@ function connectToFirestore() {
   }
 }
 
-// connects to the data base
-
-exports.getTasks = (req, res) => {
+exports.returnTasks = (callback) => {
   connectToFirestore();
 
   db.collection('task')
@@ -28,23 +26,33 @@ exports.getTasks = (req, res) => {
         thisTask.id = doc.id;
         ourTask.push(thisTask);
       });
-      res.send(ourTask);
+      callback(ourTask)
     })
-    .catch((err) => res.status(500).send('error getting task: ' + err.message));
-};
+    .catch((err) => {callback( 'error getting task: ' + err.message)});
+}
+
+
+
+
+exports.getTasks = (req, res) => {
+  connectToFirestore();
+  this.returnTasks(ourTask =>{ 
+const status = (ourTask.beginsWith('error')) ? 500 :200
+      res.set('Cache-Control', 'public, max-age=90, s-maxage=120')
+      res.status(status).send(ourTask);
+      })
+}
 
 exports.createTask = (req, res) => {
   connectToFirestore();
-  //new task comes in request body
+ 
   const newTask = req.body
-
-  //add to the database
   db.collection('task').add(newTask)
-
-  //then get response by calling a full list of all tasks
-  .then(() => this.getTasks(req,res))
-
-  //catch the error first
+  .then(() => {
+    this.returnTasks(ourTask =>{ res.send(ourTask)})
+  })
   .catch(err => response.status(500).send('error creating task: ' + err.message))
   
 };
+
+
